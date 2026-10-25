@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SupplyFlow | Inventory & Shipments</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><div class="brand">SupplyFlow</div><div class="subbrand">Inventory & Shipment Control</div></div>
+    <span class="status">Local prototype</span>
+  </header>
+  <main class="wrap">
+    <section class="intro">
+      <div><p class="eyebrow">OPERATIONS OVERVIEW</p><h1>Supply chain dashboard</h1><p class="muted">Track stock and shipments in one place.</p></div>
+      <button id="exportBtn" class="secondary">Export data</button>
+    </section>
+    <section class="stats">
+      <article class="stat"><span>Total products</span><strong id="productCount">0</strong></article>
+      <article class="stat"><span>Total stock units</span><strong id="stockCount">0</strong></article>
+      <article class="stat"><span>Shipments</span><strong id="shipmentCount">0</strong></article>
+      <article class="stat"><span>Limited stock</span><strong id="lowCount">0</strong></article>
+    </section>
+    <nav class="tabs" aria-label="Dashboard sections">
+      <button class="tab active" data-tab="inventory">Inventory</button>
+      <button class="tab" data-tab="shipments">Shipments</button>
+    </nav>
+    <section id="inventoryPanel" class="panel">
+      <div class="panel-head"><div><h2>Inventory</h2><p class="muted">Add products here while connecting your private business data later.</p></div><button id="addProductBtn">+ Add product</button></div>
+      <div class="filters"><input id="inventorySearch" placeholder="Search product, ASIN or SKU" aria-label="Search inventory"><select id="familyFilter" aria-label="Filter by family"><option value="">All product families</option></select></div>
+      <div class="table-wrap"><table><thead><tr><th>Product / Family</th><th>ASIN</th><th>SKU</th><th>Available</th><th>Updated</th><th></th></tr></thead><tbody id="inventoryRows"></tbody></table></div>
+      <p id="emptyInventory" class="empty">No inventory loaded yet. Use “Add product” to enter a test item.</p>
+    </section>
+    <section id="shipmentsPanel" class="panel hidden">
+      <div class="panel-head"><div><h2>Shipment tracking</h2><p class="muted">Keep shipment records separate from inventory.</p></div><button id="addShipmentBtn">+ Add shipment</button></div>
+      <div class="filters"><input id="shipmentSearch" placeholder="Search shipment, FBA ID, container" aria-label="Search shipments"></div>
+      <div class="table-wrap"><table><thead><tr><th>Shipment</th><th>FBA / Container</th><th>Status</th><th>ETD</th><th>ETA</th><th></th></tr></thead><tbody id="shipmentRows"></tbody></table></div>
+      <p id="emptyShipments" class="empty">No shipment records loaded yet. Use “Add shipment” to enter a test item.</p>
+    </section>
+    <p class="footnote">Prototype data is saved in this browser only. It is not a secure shared database and should not be used for confidential business records.</p>
+  </main>
+  <dialog id="productDialog">
+    <form id="productForm" method="dialog">
+      <div class="dialog-head"><h2>Add inventory item</h2><button type="button" class="x" data-close="productDialog">×</button></div>
+      <label>Product / Family<input name="family" required placeholder="e.g. Product family"></label>
+      <label>ASIN<input name="asin" placeholder="ASIN"></label>
+      <label>SKU<input name="sku" placeholder="SKU"></label>
+      <label>Available stock<input name="available" type="number" min="0" value="0" required></label>
+      <div class="dialog-actions"><button type="button" class="secondary" data-close="productDialog">Cancel</button><button type="submit">Save item</button></div>
+    </form>
+  </dialog>
+  <dialog id="shipmentDialog">
+    <form id="shipmentForm" method="dialog">
+      <div class="dialog-head"><h2>Add shipment</h2><button type="button" class="x" data-close="shipmentDialog">×</button></div>
+      <label>Shipment ID<input name="shipment" required placeholder="Shipment ID"></label>
+      <label>FBA ID / Container<input name="reference" placeholder="FBA ID or container"></label>
+      <label>Status<input name="status" placeholder="e.g. In transit"></label>
+      <label>ETD<input name="etd" type="date"></label>
+      <label>ETA<input name="eta" type="date"></label>
+      <div class="dialog-actions"><button type="button" class="secondary" data-close="shipmentDialog">Cancel</button><button type="submit">Save shipment</button></div>
+    </form>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+const $ = (s) => document.querySelector(s);
+const load = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
+let inventory = load("supplyflow_inventory");
+let shipments = load("supplyflow_shipments");
+const save = () => { localStorage.setItem("supplyflow_inventory", JSON.stringify(inventory)); localStorage.setItem("supplyflow_shipments", JSON.stringify(shipments)); render(); };
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dateNow = () => new Date().toISOString().slice(0,10);
+function render(){
+  $("#productCount").textContent = inventory.length;
+  $("#stockCount").textContent = inventory.reduce((n,p)=>n+(Number(p.available)||0),0).toLocaleString();
+  $("#shipmentCount").textContent = shipments.length;
+  $("#lowCount").textContent = inventory.filter(p=>Number(p.available)<=3).length;
+  const family = $("#familyFilter").value;
+  const search = $("#inventorySearch").value.toLowerCase();
+  const visible = inventory.filter(p=>(!family||p.family===family)&&[p.family,p.asin,p.sku].some(v=>String(v||"").toLowerCase().includes(search)));
+  $("#inventoryRows").innerHTML = visible.map(p=>`<tr><td>${esc(p.family)}</td><td>${esc(p.asin||"—")}</td><td>${esc(p.sku||"—")}</td><td><span class="pill ${Number(p.available)<=3?"low":""}">${esc(p.available)}${Number(p.available)<=3?" · Limited stock":""}</span></td><td>${esc(p.updated||"—")}</td><td><button class="secondary delete-product" data-id="${esc(p.id)}">Delete</button></td></tr>`).join("");
+  $("#emptyInventory").classList.toggle("hidden",visible.length>0);
+  const families=[...new Set(inventory.map(p=>p.family).filter(Boolean))].sort();
+  const current=$("#familyFilter").value;
+  $("#familyFilter").innerHTML='<option value="">All product families</option>'+families.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join("");
+  $("#familyFilter").value=families.includes(current)?current:"";
+  const ss=$("#shipmentSearch").value.toLowerCase();
+  const sv=shipments.filter(s=>[s.shipment,s.reference,s.status].some(v=>String(v||"").toLowerCase().includes(ss)));
+  $("#shipmentRows").innerHTML=sv.map(s=>`<tr><td>${esc(s.shipment)}</td><td>${esc(s.reference||"—")}</td><td><span class="pill">${esc(s.status||"Not set")}</span></td><td>${esc(s.etd||"—")}</td><td>${esc(s.eta||"—")}</td><td><button class="secondary delete-shipment" data-id="${esc(s.id)}">Delete</button></td></tr>`).join("");
+  $("#emptyShipments").classList.toggle("hidden",sv.length>0);
+}
+document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b===btn));
+  $("#inventoryPanel").classList.toggle("hidden",btn.dataset.tab!=="inventory");
+  $("#shipmentsPanel").classList.toggle("hidden",btn.dataset.tab!=="shipments");
+}));
+$("#addProductBtn").onclick=()=>$("#productDialog").showModal();
+$("#addShipmentBtn").onclick=()=>$("#shipmentDialog").showModal();
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).close());
+$("#productForm").addEventListener("submit",e=>{e.preventDefault();const d=new FormData(e.target);inventory.push({id:crypto.randomUUID(),family:d.get("family").trim(),asin:d.get("asin").trim(),sku:d.get("sku").trim(),available:Number(d.get("available")),updated:dateNow()});e.target.reset();$("#productDialog").close();save();});
+$("#shipmentForm").addEventListener("submit",e=>{e.preventDefault();const d=new FormData(e.target);shipments.push({id:crypto.randomUUID(),shipment:d.get("shipment").trim(),reference:d.get("reference").trim(),status:d.get("status").trim(),etd:d.get("etd"),eta:d.get("eta")});e.target.reset();$("#shipmentDialog").close();save();});
+$("#inventorySearch").addEventListener("input",render);$("#familyFilter").addEventListener("change",render);$("#shipmentSearch").addEventListener("input",render);
+document.addEventListener("click",e=>{const p=e.target.closest(".delete-product");if(p&&confirm("Delete this inventory item?")){inventory=inventory.filter(x=>x.id!==p.dataset.id);save();}const s=e.target.closest(".delete-shipment");if(s&&confirm("Delete this shipment?")){shipments=shipments.filter(x=>x.id!==s.dataset.id);save();}});
+$("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify({inventory,shipments},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="supplyflow-browser-data.json";a.click();URL.revokeObjectURL(url);};
+render();
