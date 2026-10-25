@@ -1,0 +1,6 @@
+*.xlsx
+*.xls
+*.csv
+*.json
+.env
+.env.*
